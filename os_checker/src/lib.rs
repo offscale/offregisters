@@ -60,7 +60,7 @@ impl OSDetector {
 
     // Checks if the `lsb_release` command is available
     fn has_sw_vers() -> bool {
-        if let Ok(output) = Command::new("sw_verse").output() {
+        if let Ok(output) = Command::new("sw_vers").output() {
             true
         } else {
             false
