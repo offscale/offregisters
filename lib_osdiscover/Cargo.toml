@@ -6,3 +6,5 @@ authors = ["Fletcher Haynes <fletcher@capitalprawn.com>"]
 [dependencies]
 regex = "1"
 failure = "0.1.2"
+env_logger = "0.5.13"
+log = "0.4.5"

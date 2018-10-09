@@ -1,6 +1,9 @@
 extern crate regex;
 #[macro_use]
 extern crate failure;
+#[macro_use]
+extern crate log;
+extern crate env_logger;
 
 mod error;
 
@@ -34,19 +37,19 @@ impl OSDetector {
     }
 
     /// Main function that runs through a bunch of checks to try to figure out what version of what OS the binary is running on
-    pub detect_os(&self) -> Result<OS, Error> {
+    pub fn detect_os(&self) -> Result<OS, Error> {
         if OSDetector::has_lsb_release() {
-            debug!("Possibly linux!")
-            return
+            debug!("Possibly linux!");
+            return Ok(OS::Linux{distribution: None, version: None});
         }
 
         if OSDetector::has_sw_vers() {
             debug!("Possibly OSX!");
-            Ok(OK::Macos)
+            return Ok(OS::Macos{version: None});
         }
 
         debug!("Unknown OS");
-        Ok(OK::Unknown)
+        Ok(OS::Unknown)
     }
 
     // Checks if the `lsb_release` command is available
@@ -118,9 +121,9 @@ impl OSDetector {
                 }
             }
 
-            if let Some(version) = production_version_regex.captures_iter(&output).next() {
-                if let Some(v) = version.get(1) {
-                    release = Some(v.as_str().to_owned());
+            if let Some(build_version) = product_version_regex.captures_iter(&output).next() {
+                if let Some(v) = build_version.get(1) {
+                    version = Some(v.as_str().to_owned());
                 }
             }
 
@@ -132,7 +135,7 @@ impl OSDetector {
 
             results.insert("product_name".into(), product_name);
             results.insert("version".into(), version);
-            results.insert("build_version".into(), version);
+            results.insert("build_version".into(), build_version);
             Ok(results)
 
         } else {
