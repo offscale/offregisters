@@ -1,0 +1,7 @@
+[package]
+name = "run_command"
+version = "0.0.1"
+authors = ["Fletcher Haynes <fletcher@capitalprawn.com>"]
+
+[dependencies]
+clap = "2.32.0"
