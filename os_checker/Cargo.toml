@@ -1,0 +1,8 @@
+[package]
+name = "os_checker"
+version = "0.0.1"
+authors = ["Fletcher Haynes <fletcher@capitalprawn.com>"]
+
+[dependencies]
+regex = "1"
+failure = "0.1.2"
