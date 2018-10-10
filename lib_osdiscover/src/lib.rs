@@ -17,8 +17,15 @@ use error::OSDetectionError;
 
 /// Enum with the various types of operating systems
 pub enum OS {
-    Linux{distribution: Option<String>, version: Option<String>},
-    Macos{version: Option<String>},
+    Linux{
+        distribution: Option<String>,
+        release: Option<String>
+    },
+    Macos{
+        product_name: Option<String>,
+        version: Option<String>,
+        build_version: Option<String>
+    },
     Windows,
     Unknown
 }
@@ -39,16 +46,41 @@ impl OSDetector {
     /// Main function that runs through a bunch of checks to try to figure out what version of what OS the binary is running on
     pub fn detect_os(&self) -> Result<OS, Error> {
         if OSDetector::has_lsb_release() {
-            debug!("Possibly linux!");
-            return Ok(OS::Linux{distribution: None, version: None});
+            let mut os_info = OS::Linux{distribution: None, release: None};
+            if let Ok(lsb_info) = OSDetector::parse_lsb_info() {
+                if let OS::Linux{ref mut distribution, ref mut release} = os_info {
+                    if lsb_info.contains_key("distribution".into()) {
+                        *distribution = lsb_info.get("distribution").unwrap().clone();
+                    }
+
+                    if lsb_info.contains_key("release".into()) {
+                        *release = lsb_info.get("release").unwrap().clone();
+                    }
+                }
+            }
+            return Ok(os_info);
         }
 
         if OSDetector::has_sw_vers() {
-            debug!("Possibly OSX!");
-            return Ok(OS::Macos{version: None});
+            let mut os_info = OS::Macos{product_name: None, version: None, build_version: None};
+            if let Ok(sw_info) = OSDetector::parse_sw_vers() {
+                if let OS::Macos{ref mut product_name, ref mut build_version, ref mut version} = os_info {
+                    if sw_info.contains_key("product_name".into()) {
+                        *product_name = sw_info.get("product_name").unwrap().clone();
+                    }
+
+                    if sw_info.contains_key("version".into()) {
+                        *version = sw_info.get("version").unwrap().clone();
+                    }
+
+                    if sw_info.contains_key("build_version".into()) {
+                        *build_version = sw_info.get("build_version").unwrap().clone();
+                    }
+                }
+            }
+            return Ok(os_info);
         }
 
-        debug!("Unknown OS");
         Ok(OS::Unknown)
     }
 
@@ -103,7 +135,7 @@ impl OSDetector {
     }
 
     // Attempts to use the `sw_ver` command to parse out the version of OSX
-    fn parse_sw_ver() -> Result<HashMap<String, Option<String>>, Error> {
+    fn parse_sw_vers() -> Result<HashMap<String, Option<String>>, Error> {
         let mut results = HashMap::new();
         if let Ok(output) = Command::new("sw_vers").output() {
             let output = String::from_utf8_lossy(&output.stdout);
